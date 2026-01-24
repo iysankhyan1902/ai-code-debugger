@@ -5,6 +5,53 @@
 </head>
 <body>
     <h1>AI Code Understanding & Debugging Assistant</h1>
-    <p>Paste your Python code and analyze bugs.</p>
+    <form id="debugForm">
+      <textarea id="code" rows="8" placeholder="Paste your Python code"></textarea>
+      <br><br>
+
+      <textarea id="error" rows="4" placeholder="Paste the error message"></textarea>
+      <br><br>
+
+      <label>
+        <input type="radio" name="mode" value="hint">Hint only</label>
+      <label>
+        <input type="radio" name="mode" value="full" checked>Full solution</label>
+
+<br><br>
+
+      <button type="submit">Debug Code</button>
+    </form>
+
+    <pre id="output" style="margin-top:20px;"></pre>
+    <script>
+document.getElementById("debugForm").addEventListener("submit", async function (e) {
+    e.preventDefault(); // stop page reload
+
+    const code = document.getElementById("code").value;
+    const error = document.getElementById("error").value;
+    const mode = document.querySelector('input[name="mode"]:checked').value;
+
+
+    // temporary check
+    document.getElementById("output").innerText = "Sending request to backend...";
+
+    const response = await fetch("/debug/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": "{{ csrf_token }}"
+        },
+        body: JSON.stringify({
+            code: code,
+            error: error,
+            mode: mode
+        })
+    });
+
+    const data = await response.json();
+    document.getElementById("output").innerText = data.result;
+});
+</script>
+
 </body>
 </html>

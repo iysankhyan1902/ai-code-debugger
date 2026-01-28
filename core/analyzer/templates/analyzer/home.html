@@ -1,71 +1,89 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <title>AI Code Debugging Assistant</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
+
 <body>
-    <h1>AI Code Understanding & Debugging Assistant</h1>
 
-    <form id="debugForm">
-        <textarea id="code" rows="8" placeholder="Paste your Python code"></textarea>
-        <br><br>
 
-        <textarea id="error" rows="4" placeholder="Paste the error message"></textarea>
-        <br><br>
+<div class="hero">
+    <h1>AI Code Debugging Assistant</h1>
+    <p>Analyze Python errors and get clear, reliable fixes powered by AI.</p>
+</div>
 
-        <label>
-            <input type="radio" name="mode" value="hint"> Hint only
-        </label>
-        <label>
-            <input type="radio" name="mode" value="full" checked> Full solution
-        </label>
+<!-- MAIN CONTENT -->
+<div class="container">
 
-        <br><br>
-        <button type="submit">Debug Code</button>
-    </form>
+    <!-- MAIN APP CARD -->
+    <div class="card main-card">
+        <form id="debugForm">
 
-    <pre id="output" style="margin-top:20px;"></pre>
+            <label class="section-title">Python Code</label>
+            <textarea id="code" class="code-box" placeholder="Paste your Python code"></textarea>
+            
+            <label class="section-title">Error Message</label>
+            <textarea id="error" class="error-box" placeholder="Paste the error message"></textarea>
 
-    <script>
-        document.getElementById("debugForm").addEventListener("submit", async function (e) {
-            e.preventDefault();
 
-            const code = document.getElementById("code").value;
-            const error = document.getElementById("error").value;
-            const mode = document.querySelector('input[name="mode"]:checked').value;
-            const output = document.getElementById("output");
+            <div class="radio-group">
+                <label>
+                    <input type="radio" name="mode" value="hint"> Hint only
+                </label>
+                <label>
+                    <input type="radio" name="mode" value="full" checked> Full solution
+                </label>
+            </div>
 
-            // Client-side validation
-            if (!code.trim()) {
-                output.innerText = "Please enter code before submitting.";
-                return;
-            }
+            <button type="submit">Debug Code</button>
+        </form>
+    </div>
 
-            if (!error.trim()) {
-                output.innerText = "Please enter the error message.";
-                return;
-            }
+    <!-- OUTPUT CARD -->
+    <div class="card output-card">
+        <h3>AI Analysis</h3>
+        <pre id="output">Waiting for input...</pre>
+    </div>
 
-            output.innerText = "Sending request to backend...";
+</div>
 
-            const response = await fetch("/debug/", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": "{{ csrf_token }}"
-                },
-                body: JSON.stringify({ code, error, mode })
-            });
+<script>
+document.getElementById("debugForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
 
-            const data = await response.json();
+    const code = document.getElementById("code").value;
+    const error = document.getElementById("error").value;
+    const mode = document.querySelector('input[name="mode"]:checked').value;
+    const output = document.getElementById("output");
 
-            // response handling
-            if (data.error) {
-                output.innerText = data.error;
-            } else {
-                output.innerText = data.result;
-            }
-        });
-    </script>
+    if (!code.trim()) {
+        output.innerText = "Please enter code before submitting.";
+        return;
+    }
+
+    if (!error.trim()) {
+        output.innerText = "Please enter the error message.";
+        return;
+    }
+
+    output.innerText = "Analyzing code and error...";
+
+    const response = await fetch("/debug/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": "{{ csrf_token }}"
+        },
+        body: JSON.stringify({ code, error, mode })
+    });
+
+    const data = await response.json();
+    output.innerText = data.error || data.result;
+});
+</script>
+
 </body>
 </html>
+

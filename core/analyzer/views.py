@@ -7,6 +7,16 @@ from .llm import call_llm
 from django.http import JsonResponse
 from django.shortcuts import render
 import time
+import traceback
+
+def detect_python_error(code: str):
+    try:
+        compile(code, "<user_code>", "exec")
+        return None
+    except Exception:
+        return traceback.format_exc()
+
+
 
 RATE_LIMIT = {}
 MAX_REQUESTS = 5
@@ -81,11 +91,15 @@ def debug_code(request):
             status=400
         )
 
-    if not error.strip():
-        return JsonResponse(
-            {"error": "Error message is empty"},
-            status=400
-        )
+    detected_error = detect_python_error(code)
+    
+    error = error.strip()
+    # If user error is missing OR Python detected an error
+    if detected_error:
+        error = detected_error
+    elif not error:
+        error = "No explicit error message provided. Analyze the code and infer possible issues."
+
 
     MAX_LINES = 300
     if len(code.splitlines()) > MAX_LINES:

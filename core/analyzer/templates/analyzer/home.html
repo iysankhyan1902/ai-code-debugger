@@ -22,7 +22,8 @@
         <form id="debugForm">
 
             <label class="section-title">Python Code</label>
-            <textarea id="code" class="code-box" placeholder="Paste your Python code"></textarea>
+            <div id="editor" class="code-box" style="height: 300px;"></div>
+
             
             <label class="section-title">Error Message</label>
             <textarea id="error" class="error-box" placeholder="Paste the error message"></textarea>
@@ -48,12 +49,34 @@
     </div>
 
 </div>
+<!-- Monaco Editor -->
+<script src="https://unpkg.com/monaco-editor@0.45.0/min/vs/loader.js"></script>
+
+<script>
+  let editor;
+
+  require.config({
+    paths: {
+      vs: "https://unpkg.com/monaco-editor@0.45.0/min/vs"
+    }
+  });
+
+  require(["vs/editor/editor.main"], function () {
+    editor = monaco.editor.create(document.getElementById("editor"), {
+      value: "# Write your Python code here\n",
+      language: "python",
+      theme: "vs-dark",
+      automaticLayout: true,
+      fontSize: 14
+    });
+  });
+</script>
 
 <script>
 document.getElementById("debugForm").addEventListener("submit", async function (e) {
     e.preventDefault();
 
-    const code = document.getElementById("code").value;
+    const code = editor.getValue();
     const error = document.getElementById("error").value;
     const mode = document.querySelector('input[name="mode"]:checked').value;
     const output = document.getElementById("output");
@@ -63,10 +86,6 @@ document.getElementById("debugForm").addEventListener("submit", async function (
         return;
     }
 
-    if (!error.trim()) {
-        output.innerText = "Please enter the error message.";
-        return;
-    }
 
     output.innerText = "Analyzing code and error...";
 

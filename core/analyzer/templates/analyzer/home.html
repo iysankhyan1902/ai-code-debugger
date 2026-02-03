@@ -23,6 +23,7 @@
     <!-- DEBUG FORM CARD -->
     <section class="card main-card">
         <form id="debugForm">
+            {% csrf_token %}
 
             <!-- CODE EDITOR -->
             <label class="section-title">Python Code</label>
@@ -70,232 +71,57 @@
             <h3>AI Analysis</h3>
             <button type="button" id="copyOutputBtn">Copy</button>
         </div>
-        <div class="output-section">
-    <h4>❌ ERROR_REASON</h4>
-    <p id="errorReason">Waiting for input...</p>
-</div>
+        <!-- HINT ONLY OUTPUT -->
+    <div id="hintOutput" style="display:none;">
+        <h4>💡 Hints</h4>
+        <p id="hintText">—</p>
+    </div>
 
-<div class="output-section">
-    <h4>📍 PROBLEM_LINE</h4>
-    <p id="problemLine">—</p>
-</div>
+    <!-- FULL OUTPUT -->
+    <div id="fullOutput">
 
-<div class="output-section">
-    <h4>🧠 EXPLANATION</h4>
-    <p id="explanation">—</p>
-</div>
+        <div class="ai-section">
+            <button class="ai-toggle">▶ Error Summary</button>
+            <div class="ai-content">
+                <p id="errorReason">—</p>
+            </div>
+        </div>
 
-<div class="output-section">
-    <h4>🛠️ FIXED_CODE</h4>
-    <pre><code id="fixedCode">—</code></pre>
-</div>
+        <div class="ai-section">
+            <button class="ai-toggle">▶ Problem Line</button>
+            <div class="ai-content">
+                <p id="problemLine">—</p>
+            </div>
+        </div>
 
-<div class="output-section">
-    <h4>✅ EXAMPLE</h4>
-    <pre><code id="example">—</code></pre>
-</div>
+        <div class="ai-section">
+            <button class="ai-toggle">▶ Root Cause</button>
+            <div class="ai-content">
+                <p id="explanation">—</p>
+            </div>
+        </div>
 
-        
+        <div class="ai-section">
+            <button class="ai-toggle">▶ Fix (Optimized Code)</button>
+            <div class="ai-content">
+                <pre><code id="fixedCode">—</code></pre>
+            </div>
+        </div>
 
-        <button type="button" id="clearOutputBtn">Clear Output</button>
-    </section>
+        <div class="ai-section">
+            <button class="ai-toggle">▶ Example</button>
+            <div class="ai-content">
+                <pre><code id="example">—</code></pre>
+            </div>
+        </div>
 
+    </div>
+
+    <button type="button" id="clearOutputBtn">Clear Output</button>
+</section>
 </main>
-
-<!-- MONACO EDITOR -->
 <script src="https://unpkg.com/monaco-editor@0.45.0/min/vs/loader.js"></script>
-
-<script>
-    let editor;
-
-    require.config({
-        paths: {
-            vs: "https://unpkg.com/monaco-editor@0.45.0/min/vs"
-        }
-    });
-
-    require(["vs/editor/editor.main"], function () {
-        editor = monaco.editor.create(
-            document.getElementById("editor"),
-            {
-                value: "# Write your Python code here\n",
-                language: "python",
-                theme: "vs-dark",
-                automaticLayout: true,
-                fontSize: 14
-            }
-        );
-
-        editor.onDidChangeModelContent(updateStats);
-        updateStats();
-    });
-
-    function updateStats() {
-        const code = editor.getValue();
-        document.getElementById("lineCount").innerText =
-            `Lines: ${code.split("\n").length}`;
-        document.getElementById("charCount").innerText =
-            `Chars: ${code.length}`;
-    }
-</script>
-
-<!-- UI ACTIONS -->
-<script>
-    // Clear code
-    document.getElementById("clearCodeBtn").addEventListener("click", () => {
-        editor.setValue("");
-    });
-
-    // Clear output
-    document.getElementById("clearOutputBtn").addEventListener("click", () => {
-        document.getElementById("output").innerText = "Waiting for input...";
-    });
-
-    // Copy output
-    document.getElementById("copyOutputBtn").addEventListener("click", function () {
-        const text = `
-ERROR_REASON:
-${errorReason.innerText}
-
-PROBLEM_LINE:
-${problemLine.innerText}
-
-EXPLANATION:
-${explanation.innerText}
-
-FIXED_CODE:
-${fixedCode.innerText}
-
-EXAMPLE:
-${example.innerText}
-`;
-
-
-        if (!text || text === "Waiting for input...") {
-            alert("Nothing to copy!");
-            return;
-        }
-
-        const textarea = document.createElement("textarea");
-        textarea.value = text;
-
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand("copy");
-        document.body.removeChild(textarea);
-
-        this.innerText = "Copied!";
-        setTimeout(() => (this.innerText = "Copy"), 1500);
-    });
-
-    // Theme toggle
-    const btn = document.getElementById("themeToggle");
-
-  // check saved theme
-  if (localStorage.getItem("theme") === "light") {
-    document.body.classList.add("light");
-    btn.innerText = "☀️";
-  }
-
-  btn.addEventListener("click", () => {
-    document.body.classList.toggle("light");
-
-    if (document.body.classList.contains("light")) {
-      localStorage.setItem("theme", "light");
-      btn.innerText = "☀️ Light Mode";
-    } else {
-      localStorage.setItem("theme", "dark");
-      btn.innerText = "🌙 Dark Mode";
-
-    }
-  });
-</script>
-<script>
-function renderAIOutput(rawText) {
-    const sections = {
-        ERROR_REASON: "",
-        PROBLEM_LINE: "",
-        EXPLANATION: "",
-        FIXED_CODE: "",
-        EXAMPLE: ""
-    };
-
-    let currentKey = null;
-
-    rawText.split("\n").forEach(line => {
-        const trimmed = line.trim();
-
-        if (trimmed.startsWith("ERROR_REASON:")) {
-            currentKey = "ERROR_REASON";
-            sections[currentKey] = trimmed.replace("ERROR_REASON:", "").trim();
-        } 
-        else if (trimmed.startsWith("PROBLEM_LINE:")) {
-            currentKey = "PROBLEM_LINE";
-            sections[currentKey] = trimmed.replace("PROBLEM_LINE:", "").trim();
-        } 
-        else if (trimmed.startsWith("EXPLANATION:")) {
-            currentKey = "EXPLANATION";
-            sections[currentKey] = trimmed.replace("EXPLANATION:", "").trim();
-        } 
-        else if (trimmed.startsWith("FIXED_CODE:")) {
-            currentKey = "FIXED_CODE";
-            sections[currentKey] = "";
-        } 
-        else if (trimmed.startsWith("EXAMPLE:")) {
-            currentKey = "EXAMPLE";
-            sections[currentKey] = "";
-        } 
-        else if (currentKey) {
-            sections[currentKey] += "\n" + trimmed;
-        }
-    });
-
-    document.getElementById("errorReason").innerText = sections.ERROR_REASON || "—";
-    document.getElementById("problemLine").innerText = sections.PROBLEM_LINE || "—";
-    document.getElementById("explanation").innerText = sections.EXPLANATION || "—";
-    document.getElementById("fixedCode").innerText = sections.FIXED_CODE || "—";
-    document.getElementById("example").innerText = sections.EXAMPLE || "—";
-}
-</script>
-
-<!-- FORM SUBMISSION -->
-<script>
-    document
-        .getElementById("debugForm")
-        .addEventListener("submit", async function (e) {
-            e.preventDefault();
-
-            const code = editor.getValue();
-            const error = document.getElementById("error").value;
-            const mode = document.querySelector(
-                'input[name="mode"]:checked'
-            ).value;
-           ["errorReason","problemLine","explanation","fixedCode","example"].forEach(id => {
-    document.getElementById(id).innerText = "—";
-});
-
-
-            if (!code.trim()) {
-                output.innerText = "Please enter code before submitting.";
-                return;
-            }
-
-            
-
-            const response = await fetch("/debug/", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": "{{ csrf_token }}"
-                },
-                body: JSON.stringify({ code, error, mode })
-            });
-
-            const data = await response.json();
-            renderAIOutput(data.error || data.result);
-
-        });
-</script>
+<script src="{% static 'js/app.js' %}"></script>
 
 </body>
 </html>

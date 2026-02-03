@@ -287,3 +287,41 @@ body.light {
 .theme-toggle:hover {
   background: rgba(255, 255, 255, 0.08);
 }
+
+.ai-section {
+    background: #1e1e1e;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    overflow: hidden;
+}
+
+.ai-toggle {
+    width: 100%;
+    background: transparent;
+    color: #fff;
+    padding: 12px 14px;
+    font-size: 15px;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.ai-toggle:hover {
+    background: #2a2a2a;
+}
+
+.ai-content {
+    display: none;
+    padding: 12px 14px;
+    border-top: 1px solid #333;
+    color: #d4d4d4;
+}
+
+.ai-content pre {
+    background: #111;
+    padding: 10px;
+    border-radius: 6px;
+    overflow-x: auto;
+}
+

@@ -33,7 +33,7 @@ body.light {
     --text-main: #0f172a;
     --text-muted: #475569;
 
-    --border-light: #e2e8f0;
+    --border-light: #d9e5f5;
 
     --shadow-soft: 0 10px 30px rgba(15, 23, 42, 0.08);
 }
@@ -66,7 +66,6 @@ body {
     font-size: 12px;
     color: #c7d2fe;
 }
-
 
 .container {
     max-width: 920px;
@@ -262,7 +261,7 @@ body {
 }
 
 body.light {
-  background: #f9fafb;
+  background: #ecf1f7;
   color: #010712;
 }
 
@@ -276,7 +275,7 @@ body.light {
   font-weight: 500;
 
   border-radius: 20px;
-  border: 1px solid #374151;
+  border: 1px solid #3d4b62;
 
   background: transparent;
   color: inherit;
@@ -285,7 +284,7 @@ body.light {
 }
 
 .theme-toggle:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(25, 2, 2, 0.08);
 }
 
 .ai-section {
@@ -323,5 +322,25 @@ body.light {
     padding: 10px;
     border-radius: 6px;
     overflow-x: auto;
+}
+
+.empty-state {
+  margin: 12px 0 14px;
+  padding: 08px 12px;
+  border-left: 2px solid #4f8cff;
+  background: rgba(79, 140, 255, 0.08);
+  color: #cfd8ff;
+  font-size: 0.8rem;
+  border-radius: 4px;
+}
+
+#emptyState {
+  display: block;
+}
+
+
+body.light .empty-state {
+  background: rgba(79, 140, 255, 0.1);
+  color: #333;
 }
 

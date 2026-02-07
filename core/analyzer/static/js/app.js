@@ -1,79 +1,81 @@
 let editor;
 
 /* =============================
-   MONACO EDITOR
+   GLOBAL SPEECH CONTROL
 ============================= */
-require.config({
-    paths: {
-        vs: "https://unpkg.com/monaco-editor@0.45.0/min/vs"
-    }
-});
-
-require(["vs/editor/editor.main"], function () {
-    editor = monaco.editor.create(
-        document.getElementById("editor"),
-        {
-            value: "# Write your Python code here\n",
-            language: "python",
-            theme: "vs-dark",
-            automaticLayout: true,
-            fontSize: 14
-        }
-    );
-
-    editor.onDidChangeModelContent(updateStats);
-    updateStats();
-});
-
-function updateStats() {
-    if (!editor) return;
-
-    const code = editor.getValue();
-
-    document.getElementById("lineCount").innerText =
-        `Lines: ${code.split("\n").length}`;
-
-    document.getElementById("charCount").innerText =
-        `Chars: ${code.length}`;
+function stopSpeech() {
+  if ("speechSynthesis" in window) {
+    speechSynthesis.cancel();
+  }
 }
 
 /* =============================
-   DOM READY
+   MONACO EDITOR
+============================= */
+require.config({
+  paths: {
+    vs: "https://unpkg.com/monaco-editor@0.45.0/min/vs"
+  }
+});
+
+require(["vs/editor/editor.main"], function () {
+  editor = monaco.editor.create(
+    document.getElementById("editor"),
+    {
+      value: "# Write your Python code here\n",
+      language: "python",
+      theme: "vs-dark",
+      automaticLayout: true,
+      fontSize: 14
+    }
+  );
+
+  editor.onDidChangeModelContent(updateStats);
+  updateStats();
+});
+
+function updateStats() {
+  if (!editor) return;
+
+  const code = editor.getValue();
+  document.getElementById("lineCount").innerText =
+    `Lines: ${code.split("\n").length}`;
+  document.getElementById("charCount").innerText =
+    `Chars: ${code.length}`;
+}
+
+/* =============================
+   DOM EVENTS
 ============================= */
 document.addEventListener("DOMContentLoaded", () => {
 
-    /* Clear code */
-    const clearButton = document.getElementById("clearCodeBtn");
-    
-    clearButton.addEventListener("click", function () {
-    if (editor) {
-        editor.setValue("");
+  const emptyState = document.getElementById("emptyState");
+  const debugForm = document.getElementById("debugForm");
+
+  /* Clear code */
+  document.getElementById("clearCodeBtn").addEventListener("click", () => {
+    if (editor) editor.setValue("");
+  });
+
+  /* Clear output */
+  document.getElementById("clearOutputBtn").addEventListener("click", () => {
+    stopSpeech();
+
+    document.getElementById("hintOutput").style.display = "none";
+    document.getElementById("fullOutput").style.display = "block";
+
+    ["errorReason", "problemLine", "explanation", "fixedCode", "example"]
+      .forEach(id => document.getElementById(id).innerText = "—");
+
+    document.getElementById("hintText").innerText = "—";
+
+    if (emptyState) {
+      emptyState.style.display = "block";
     }
-});
+  });
 
-
-
-    /* Clear output */
-    const clearOutputBtn = document.getElementById("clearOutputBtn");
-    
-    clearOutputBtn.addEventListener("click", () => {
-    const ids = [
-        "errorReason",
-        "problemLine",
-        "explanation",
-        "fixedCode",
-        "example"
-    ];
-
-    ids.forEach(id => {
-        document.getElementById(id).innerText = "—";
-    });
-});
-
-
-    /* Copy output */
-    document.getElementById("copyOutputBtn").addEventListener("click", async () => {
-
+  /* Copy output */
+  document.getElementById("copyOutputBtn").addEventListener("click", async () => {
     const outputText = `
 ERROR_REASON:
 ${errorReason.innerText}
@@ -89,122 +91,122 @@ ${fixedCode.innerText}
 
 EXAMPLE:
 ${example.innerText}
-    `.trim();
+`.trim();
 
     if (!outputText || outputText === "—") {
-        alert("Nothing to copy!");
-        return;
+      alert("Nothing to copy!");
+      return;
     }
 
     try {
-        await navigator.clipboard.writeText(outputText);
+      await navigator.clipboard.writeText(outputText);
+      const btn = document.getElementById("copyOutputBtn");
+      btn.innerText = "Copied!";
+      setTimeout(() => btn.innerText = "Copy", 1500);
+    } catch {
+      alert("Copy failed. Use HTTPS or localhost.");
+    }
+  });
 
-        const btn = document.getElementById("copyOutputBtn");
-        btn.innerText = "Copied!";
-        setTimeout(() => btn.innerText = "Copy", 1500);
+  /* Listen explanation */
+  document.getElementById("listenExplanationBtn")
+    .addEventListener("click", () => {
+      const text = getTextToSpeak();
+      if (!text) {
+        alert("Nothing to read yet");
+        return;
+      }
+      speakText(text);
+    });
+
+  /* Theme toggle */
+  const themeBtn = document.getElementById("themeToggle");
+  if (localStorage.getItem("theme") === "light") {
+    document.body.classList.add("light");
+    themeBtn.innerText = "☀️ Light Mode";
+  }
+
+  themeBtn.addEventListener("click", () => {
+    document.body.classList.toggle("light");
+    const isLight = document.body.classList.contains("light");
+    localStorage.setItem("theme", isLight ? "light" : "dark");
+    themeBtn.innerText = isLight ? "☀️ Light Mode" : "🌙 Dark Mode";
+  });
+
+  /* Collapsible AI sections */
+  document.querySelectorAll(".ai-toggle").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const content = btn.nextElementSibling;
+      const isOpen = content.style.display === "block";
+      content.style.display = isOpen ? "none" : "block";
+      btn.innerText = (isOpen ? "▶ " : "▼ ") + btn.innerText.slice(2);
+    });
+  });
+
+  /* =============================
+     DEBUG FORM (SUBMIT ONLY)
+  ============================= */
+  debugForm.addEventListener("submit", async (e) => {
+    e.preventDefault(); // stop reload
+
+    if (emptyState) {
+      emptyState.style.display = "none";
+    }
+
+    stopSpeech();
+
+    if (!editor) return;
+
+    const code = editor.getValue();
+    const error = document.getElementById("error").value;
+    const mode = document.querySelector('input[name="mode"]:checked').value;
+
+    if (!code.trim()) {
+      alert("Please enter some code");
+      return;
+    }
+
+    const csrfToken =
+      document.querySelector("[name=csrfmiddlewaretoken]").value;
+
+    try {
+      const response = await fetch("/debug/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrfToken
+        },
+        body: JSON.stringify({ code, error, mode })
+      });
+
+      const data = await response.json();
+
+      if (data.mode === "hint") {
+        showHintOnly(data.result);
+      } else {
+        showFullOutput(data.error || data.result);
+      }
 
     } catch (err) {
-        console.error("Clipboard error:", err);
-        alert("Copy failed. Use https or localhost.");
+      console.error("Debug error:", err);
+      alert("Something went wrong");
     }
+  });
 });
 
-
-    /* Theme toggle */
-    const btn = document.getElementById("themeToggle");
-
-    if (localStorage.getItem("theme") === "light") {
-        document.body.classList.add("light");
-        btn.innerText = "☀️ Light Mode";
-    }
-
-    btn.addEventListener("click", () => {
-        document.body.classList.toggle("light");
-
-        if (document.body.classList.contains("light")) {
-            localStorage.setItem("theme", "light");
-            btn.innerText = "☀️ Light Mode";
-        } else {
-            localStorage.setItem("theme", "dark");
-            btn.innerText = "🌙 Dark Mode";
-        }
-    });
-
-    /* Collapsible sections */
-    document.querySelectorAll(".ai-toggle").forEach(button => {
-        button.addEventListener("click", () => {
-            const content = button.nextElementSibling;
-            const isOpen = content.style.display === "block";
-
-            if (isOpen) {
-               content.style.display = "none";
-          } 
-          else 
-               {
-                    content.style.display = "block";
-               }
-
-            button.innerText =
-                (isOpen ? "▶ " : "▼ ") + button.innerText.slice(2);
-        });
-    });
-
-    /* =============================
-       FORM SUBMISSION (MOVED HERE)
-    ============================= */
-    document.getElementById("debugForm").addEventListener("submit", async (e) => {
-        e.preventDefault();
-
-        if (!editor) {
-            alert("Editor not ready yet");
-            return;
-        }
-
-        const code = editor.getValue();
-        const error = document.getElementById("error").value;
-        const mode = document.querySelector('input[name="mode"]:checked').value;
-
-        if (!code.trim()) return;
-
-        const csrfToken =
-            document.querySelector("[name=csrfmiddlewaretoken]").value;
-
-        const response = await fetch("/debug/", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": csrfToken
-            },
-            body: JSON.stringify({ code, error, mode })
-        });
-
-        const data = await response.json();
-        console.log("AI RESPONSE:", data); // 
-        if (data.mode === "hint") {
-    showHintOnly(data.result);
-} else {
-    showFullOutput(data.error || data.result);
-}
-
-
-    });
-});
-
-
+/* =============================
+   OUTPUT HANDLING
+============================= */
 function showHintOnly(hintText) {
-    // show hint, hide full UI
-    document.getElementById("hintOutput").style.display = "block";
-    document.getElementById("fullOutput").style.display = "none";
-
-    document.getElementById("hintText").innerText = hintText;
+  document.getElementById("hintOutput").style.display = "block";
+  document.getElementById("fullOutput").style.display = "none";
+  document.getElementById("hintText").innerText = hintText;
 }
 
 function showFullOutput(rawText) {
-    // hide hint, show full UI
-    document.getElementById("hintOutput").style.display = "none";
-    document.getElementById("fullOutput").style.display = "block";
-
-    renderAIOutput(rawText);
+  document.getElementById("hintOutput").style.display = "none";
+  document.getElementById("fullOutput").style.display = "block";
+  renderAIOutput(rawText);
 }
 
 //Clear output should reset BOTH views
@@ -268,3 +270,40 @@ function renderAIOutput(rawText) {
         firstToggle.innerText = "▼ " + firstToggle.innerText.slice(2);
     }
 }
+
+/* =============================
+   TEXT TO SPEECH
+============================= */
+window.speakText = function (text) {
+  if (!("speechSynthesis" in window)) {
+    alert("Text-to-Speech not supported");
+    return;
+  }
+
+  stopSpeech();
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.rate = 0.9;
+  utterance.pitch = 1;
+  utterance.volume = 1;
+
+  speechSynthesis.speak(utterance);
+};
+
+function getTextToSpeak() {
+  const hintOutput = document.getElementById("hintOutput");
+
+  if (hintOutput.style.display === "block") {
+    const t = document.getElementById("hintText").innerText;
+    return t !== "—" ? t.trim() : "";
+  }
+
+  const ids = ["errorReason", "problemLine", "explanation", "example"];
+  return ids
+    .map(id => document.getElementById(id).innerText)
+    .filter(t => t && t !== "—")
+    .join(". ");
+}
+
+
+

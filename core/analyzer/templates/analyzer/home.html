@@ -4,13 +4,12 @@
     <title>AI Code Debugging Assistant</title>
     {% load static %}
     <link rel="stylesheet" href="/static/css/style.css">
-    <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
-    🌙
-</button>
 </head>
 
 <body>
-
+<button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
+    🌙
+</button>
 <!-- HERO SECTION -->
 <header class="hero">
     <h1>AI Code Debugging Assistant</h1>
@@ -60,6 +59,14 @@
                 </label>
             </div>
 
+            <div id="emptyState" class="empty-state">
+                <p><strong>👋 New here?</strong></p>
+                <p>
+                    Paste your <b>Python code</b> and <b>error message</b> below.<br>
+                    Choose <b>Hint only</b> or <b>Full solution</b>, then click <b>Debug</b>.
+                </p>
+            </div>
+
             <!-- SUBMIT -->
             <button type="submit">Debug Code</button>
         </form>
@@ -70,6 +77,10 @@
         <div class="output-header">
             <h3>AI Analysis</h3>
             <button type="button" id="copyOutputBtn">Copy</button>
+            <button id="listenExplanationBtn">
+  🔊 Listen Full Output
+</button>
+
         </div>
         <!-- HINT ONLY OUTPUT -->
     <div id="hintOutput" style="display:none;">
@@ -81,35 +92,35 @@
     <div id="fullOutput">
 
         <div class="ai-section">
-            <button class="ai-toggle">▶ Error Summary</button>
+            <button class="ai-toggle">▶ Error Summary ⚠️ </button>
             <div class="ai-content">
                 <p id="errorReason">—</p>
             </div>
         </div>
 
         <div class="ai-section">
-            <button class="ai-toggle">▶ Problem Line</button>
+            <button class="ai-toggle">▶ Problem Line 🎯</button>
             <div class="ai-content">
                 <p id="problemLine">—</p>
             </div>
         </div>
 
         <div class="ai-section">
-            <button class="ai-toggle">▶ Root Cause</button>
+            <button class="ai-toggle">▶ Root Cause 🧠</button>
             <div class="ai-content">
                 <p id="explanation">—</p>
             </div>
         </div>
 
         <div class="ai-section">
-            <button class="ai-toggle">▶ Fix (Optimized Code)</button>
+            <button class="ai-toggle">▶ Fix 🔧 (Optimized Code)</button>
             <div class="ai-content">
                 <pre><code id="fixedCode">—</code></pre>
             </div>
         </div>
 
         <div class="ai-section">
-            <button class="ai-toggle">▶ Example</button>
+            <button class="ai-toggle">▶ Example 📘</button>
             <div class="ai-content">
                 <pre><code id="example">—</code></pre>
             </div>

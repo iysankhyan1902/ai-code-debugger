@@ -307,3 +307,7 @@ function getTextToSpeak() {
 
 
 
+
+
+
+

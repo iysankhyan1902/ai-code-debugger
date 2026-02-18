@@ -7,9 +7,45 @@
 </head>
 
 <body>
-<button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
-    🌙
-</button>
+<nav class="top-nav">
+
+    <div class="nav-container">
+
+        <div class="nav-left">
+            <button id="themeToggle" class="theme-toggle">
+                🌙
+            </button>
+
+            <span class="brand">
+                AI Debugger
+            </span>
+
+            {% if user.is_authenticated %}
+                <a href="{% url 'history' %}" class="nav-link">
+                    History
+                </a>
+            {% endif %}
+        </div>
+
+        <div class="nav-right">
+            {% if user.is_authenticated %}
+                <span class="nav-user">{{ user.username }}</span>
+
+                <form method="post" action="{% url 'logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="logout-btn">
+                        Logout
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+
+    </div>
+
+</nav>
+
+
+
 <!-- HERO SECTION -->
 <header class="hero">
     <h1>AI Code Debugging Assistant</h1>

@@ -1,0 +1,18 @@
+<h2>Your Debug History</h2>
+
+{% for item in submissions %}
+<div style="border:1px solid #ccc; padding:10px; margin:10px;">
+    <h4>{{ item.language }} | {{ item.submitted_at }}</h4>
+
+    <strong>Code:</strong>
+    <pre>{{ item.code }}</pre>
+
+    <strong>Error:</strong>
+    <p>{{ item.error_message }}</p>
+
+    <strong>AI Response:</strong>
+    <pre>{{ item.ai_response }}</pre>
+</div>
+{% empty %}
+<p>No history yet.</p>
+{% endfor %}
